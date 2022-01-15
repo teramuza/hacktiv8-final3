@@ -1,0 +1,11 @@
+node_modules
+yarn-error.log
+.DS Store
+
+# Jetbrains IDEa
+.idea
+
+# VSCode
+.vscode
+
+.env

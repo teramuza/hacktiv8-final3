@@ -1,0 +1,33 @@
+{
+  "name": "hacktiv8-final3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "serve": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teramuza/hacktiv8-final3.git"
+  },
+  "author": "teramuza",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/teramuza/hacktiv8-final3/issues"
+  },
+  "homepage": "https://github.com/teramuza/hacktiv8-final3#readme",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.7.1",
+    "sequelize": "^6.12.0-alpha.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "sequelize-cli": "^6.3.0"
+  }
+}
