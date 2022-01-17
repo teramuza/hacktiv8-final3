@@ -5,25 +5,26 @@ const {ValidationError} = require('sequelize');
 const router = express.Router();
 const verifyToken = require('../middleware/verifyToken')
 const responseUtil = require('../helpers/response');
+const { toRupiah } = require('../helpers/currency');
 const { User } = require('../models');
 const {JWT_SECRET_KEY} = process.env;
 
 const register = async (req, res) => {
     try {
-        const {
+        let {
             full_name,
             email,
-            username,
             password,
-            profile_image_url,
-            age,
-            phone_number
+            balance,
+            gender,
+            role
         } = req.body;
-        User.create({full_name, email, username, password, profile_image_url, age, phone_number})
+        if (!balance) balance = 0;
+        User.create({full_name, email, password, balance, gender, role})
             .then(() => responseUtil.successResponse(
                 res,
                 null,
-                {user: {email, full_name, username, profile_image_url, age, phone_number}},
+                {user: {email, full_name, balance: toRupiah(balance), gender, role}},
                 201
             ))
             .catch((e) => {
@@ -72,14 +73,10 @@ const login = (req, res) => {
 
 const updateUser = (req, res) => {
     try {
-        const {email, full_name, username, profile_image_url, age, phone_number} = req.body;
+        const {email, full_name} = req.body;
         const bodyData = {
             email,
             full_name,
-            username,
-            profile_image_url,
-            age,
-            phone_number
         }
         const userId = parseInt(req.params.userId);
         if (req.user.id === userId) {
