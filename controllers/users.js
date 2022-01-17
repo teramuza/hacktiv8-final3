@@ -131,6 +131,33 @@ const updatePassword = (req, res) => {
     }
 }
 
+const topUpBalance = (req, res) => {
+    try {
+        const {balance} = req.body;
+        const {id} = req.user;
+        if (req.user.id === id) {
+            User.increment({balance: +balance}, {where: {id}, returning: true})
+                .then((data) => {
+                    if (data[0] === 0){
+                        return responseUtil.badRequestResponse(res, {message: 'user not found'});
+                    }
+                    return responseUtil
+                        .successResponse(res, `Your balance has been successfully updated to ${toRupiah(data[0][0][0].balance)}`);
+                })
+                .catch(err => {
+                    if (err instanceof ValidationError) {
+                        return responseUtil.validationErrorResponse(res, err.errors[0]);
+                    }
+                    return responseUtil.badRequestResponse(res, err);
+                })
+        } else {
+            return responseUtil.badRequestResponse(res, {message: 'you can only update your own balance'})
+        }
+    } catch (e) {
+        return responseUtil.serverErrorResponse(res, {message: e.message});
+    }
+}
+
 const deleteUser = (req, res) => {
     try {
         const userId = parseInt(req.params.userId);
@@ -152,6 +179,7 @@ const deleteUser = (req, res) => {
 router.post('/register', register);
 router.post('/login', login);
 router.put('/:userId', verifyToken, updateUser);
+router.patch('/topup', verifyToken, topUpBalance);
 router.patch('/changePassword', updatePassword);
 router.delete('/:userId', verifyToken, deleteUser);
 
