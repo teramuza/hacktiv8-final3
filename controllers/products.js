@@ -25,7 +25,7 @@ const getProducts = (req, res) => {
                 container["updatedAt"] = item.updatedAt
                 return container;
             })
-            return responseUtil.successResponse(res, null, rebuild);migrations/20220118170823-create-product.js
+            return responseUtil.successResponse(res, null, rebuild);
         })
         .catch((e) => {
             if (e instanceof ValidationError) {
