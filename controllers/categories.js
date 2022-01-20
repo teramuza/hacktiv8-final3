@@ -4,7 +4,7 @@ const {ValidationError} = require('sequelize');
 const router = express.Router();
 const verifyAdmin = require('../middleware/verifyAdmin');
 const responseUtil = require('../helpers/response');
-const { Category } = require('../models');
+const { Category, Product } = require('../models');
 
 const createCategory = async (req, res) => {
     try {
@@ -26,7 +26,11 @@ const createCategory = async (req, res) => {
 
 const getCategories = async (req, res) => {
     try {
-        Category.findAll()
+        Category.findAll({
+            include: {
+                model: Product,
+            }
+        })
             .then((categories) => {
                 return responseUtil.successResponse(res, null, {categories});
             })
