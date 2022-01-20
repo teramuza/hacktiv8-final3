@@ -26,19 +26,20 @@ module.exports = (sequelize, DataTypes) => {
 
     sold_product_amount: {
       type: DataTypes.DECIMAL,
-      allowNull: false,
       validate: {
         isNumeric: {
           msg: 'sold_product_amount must be numeric'
         },
-        notNull: {
-          msg: 'sold_product_amount required',
-        }
       },
     }
   }, {
     sequelize,
     modelName: 'Category',
+    hooks: {
+      beforeCreate: (attributes, _) => {
+        attributes.sold_product_amount = 0;
+      }
+    }
   });
   return Category;
 };

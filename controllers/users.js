@@ -51,7 +51,6 @@ const login = (req, res) => {
                             const userData = {
                                 id: user.id,
                                 email: user.email,
-                                username: user.username,
                             }
                             const token = jwt.sign(userData, JWT_SECRET_KEY, {
                                 expiresIn: '1h',
