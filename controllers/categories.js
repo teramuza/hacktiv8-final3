@@ -36,7 +36,47 @@ const getCategories = async (req, res) => {
     }
 }
 
+const updateCategory = async (req, res) => {
+    try {
+        const {type} = req.body;
+        const id = parseInt(req.params.categoryId);
+        Category.update({type}, {where: id, returning: true})
+            .then((data) => {
+                if (data[0] === 0){
+                    return responseUtil.badRequestResponse(res, {message: 'data not found'});
+                }
+
+                return responseUtil.successResponse(res, null, {category: data[1][0]});
+            })
+            .catch(err => {
+                return responseUtil.badRequestResponse(res, err);
+            })
+    } catch (e) {
+        return responseUtil.serverErrorResponse(res, {message: e.message});
+    }
+}
+
+const deleteCategory = async (req, res) => {
+    try {
+        const id = parseInt(req.params.categoryId);
+        Category.destroy({where: {id}})
+            .then(result => {
+                if (result === 0) {
+                    return responseUtil.badRequestResponse(res, {message: 'Category not found'});
+                }
+                return responseUtil.successResponse(res, 'Category has been successfully deleted')
+            })
+            .catch(err => {
+                return responseUtil.badRequestResponse(res, err);
+            })
+    } catch (e) {
+        return responseUtil.serverErrorResponse(res, {message: e.message});
+    }
+}
+
 router.post('/', verifyAdmin, createCategory);
 router.get('/', getCategories);
+router.patch('/:categoryId', verifyAdmin, updateCategory);
+router.delete('/:categoryId', verifyAdmin, deleteCategory);
 
 module.exports = router;
