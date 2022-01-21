@@ -47,7 +47,8 @@ const createTransaction = (req, res) => {
                                         201
                                 )).catch((err) => {
                                         if (err instanceof BadRequestErr)
-                                            responseUtil.badRequestResponse(res, err)
+                                            return responseUtil.badRequestResponse(res, err);
+                                        return responseUtil.serverErrorResponse(res, err);
                                 })
                             })
                             .catch ((e) => {
