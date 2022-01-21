@@ -57,19 +57,11 @@ module.exports = (sequelize, DataTypes) => {
     hooks: {
       afterCreate: (TransactionHistory) => {
         sequelize.models.User.decrement({balance: TransactionHistory.total_price}, {where: {id: TransactionHistory.userId}})
-        .then((data) => {
-          console.log(data)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
         sequelize.models.Product.decrement({stock: TransactionHistory.quantity}, {where: {id: TransactionHistory.productId}})
-        .then((data) => {
-          console.log(data)
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+        sequelize.models.Category.increment({sold_product_amount: TransactionHistory.quantity}, {where: {id: sequelize.literal(
+          sequelize.models.Product.findOne({attributes:['id']}, {where: {id: 1}})    
+        ) 
+      }})
       }
     }
   });
