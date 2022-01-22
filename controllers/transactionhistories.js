@@ -2,10 +2,10 @@ const express = require('express');
 const {ValidationError} = require('sequelize');
 
 const router = express.Router();
-const verifyToken = require('../middleware/verifyToken');
 const responseUtil = require('../helpers/response');
 const { toRupiah } = require('../helpers/currency');
 const { TransactionHistory, Product, User } = require('../models');
+const verifyAdmin = require("../middleware/verifyAdmin");
 
 const createTransaction = (req, res) => {
     try {
@@ -59,7 +59,7 @@ const createTransaction = (req, res) => {
         })
         .catch()
     } catch (error) {
-
+        return responseUtil.serverErrorResponse(res, {message: error.message});
     }
 }
 
@@ -161,9 +161,9 @@ const getTransaction = (req, res) => {
     }
 }
 
-router.get('/user', verifyToken, getTransactionUser);
-router.get('/admin', verifyToken, getTransactionAdmin);
-router.get('/:transactionId', verifyToken, getTransaction);
-router.post('/', verifyToken, createTransaction);
+router.post('/', createTransaction);
+router.get('/user', getTransactionUser);
+router.get('/admin', verifyAdmin, getTransactionAdmin);
+router.get('/:transactionId', getTransaction);
 
 module.exports = router;
