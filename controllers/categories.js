@@ -2,6 +2,8 @@ const express = require('express');
 const {ValidationError} = require('sequelize');
 
 const router = express.Router();
+const verifyToken = require('../middleware/verifyToken');
+const verifyUser = require('../middleware/verifyUser');
 const verifyAdmin = require('../middleware/verifyAdmin');
 const responseUtil = require('../helpers/response');
 const { Category } = require('../models');
@@ -40,7 +42,7 @@ const updateCategory = async (req, res) => {
     try {
         const {type} = req.body;
         const id = parseInt(req.params.categoryId);
-        Category.update({type}, {where: id, returning: true})
+        Category.update({type}, {where: {id: id}, returning: true})
             .then((data) => {
                 if (data[0] === 0){
                     return responseUtil.badRequestResponse(res, {message: 'data not found'});
@@ -74,9 +76,9 @@ const deleteCategory = async (req, res) => {
     }
 }
 
-router.post('/', verifyAdmin, createCategory);
-router.get('/', getCategories);
-router.patch('/:categoryId', verifyAdmin, updateCategory);
-router.delete('/:categoryId', verifyAdmin, deleteCategory);
+router.post('/', verifyToken, verifyUser, verifyAdmin, createCategory);
+router.get('/', verifyToken, verifyUser, verifyAdmin, getCategories);
+router.patch('/:categoryId', verifyToken, verifyUser, verifyAdmin, updateCategory);
+router.delete('/:categoryId', verifyToken, verifyUser, verifyAdmin, deleteCategory);
 
 module.exports = router;

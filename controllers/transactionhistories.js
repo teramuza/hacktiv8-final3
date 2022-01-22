@@ -127,9 +127,43 @@ const getTransactionAdmin = (req, res) => {
     }
 }
 
+const getTransaction = (req, res) => {
+    try {
+        const transactionId = parseInt(req.params.transactionId);
+        const userId = req.user.id;
+        TransactionHistory.findOne({
+            where: {id: transactionId},
+            include: [
+                {
+                    model: Product,
+                    attributes: ['id', 'title', 'price', 'stock', 'CategoryId']
+                }
+            ]
+        })
+        .then((data) => {
+            if (data === null) {
+                return responseUtil.badRequestResponse(res, {message: 'data not found'});
+            }
+            if (data.userId !== userId) {
+                return responseUtil.badRequestResponse(res, {message: 'data is not yours'});
+            }
+            return responseUtil.successResponse(res, null, {data});
+        })
+        .catch((e) => {
+            if (e instanceof ValidationError) {
+                return responseUtil.validationErrorResponse(res, e.errors[0]);
+            } else {
+                return responseUtil.badRequestResponse(res, e);
+            }
+        })
+    } catch (error) {
+        return responseUtil.serverErrorResponse(res, {message: error.message});
+    }
+}
 
-router.post('/', verifyToken, createTransaction);
 router.get('/user', verifyToken, getTransactionUser);
 router.get('/admin', verifyToken, getTransactionAdmin);
+router.get('/:transactionId', verifyToken, getTransaction);
+router.post('/', verifyToken, createTransaction);
 
 module.exports = router;

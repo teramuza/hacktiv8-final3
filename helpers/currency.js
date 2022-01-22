@@ -1,7 +1,7 @@
 const toRupiah = (value) => new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 9,
 }).format(value);
 
 module.exports = { toRupiah }
