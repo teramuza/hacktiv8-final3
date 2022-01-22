@@ -132,11 +132,15 @@ const updateProduct = (req, res) => {
 const updateCategoryId = (req, res) => {
     try {
         const { CategoryId } = req.body;
+        const id = parseInt(req.params.productId);
         Category.findOne({where: {id: CategoryId}})
         .then((category) => {
             if(category) {
-                Product.update({CategoryId: CategoryId}, {where: {CategoryId}, returning: true})
+                Product.update({CategoryId: CategoryId}, {where: {id: id}, returning: true})
                 .then((product) => {
+                    if (product[0] === 0) {
+                        return responseUtil.badRequestResponse(res, {message: 'data not found'});
+                    }
                     return responseUtil.successResponse(res, null, {product: {
                         id: product[1][0].id,
                         title: product[1][0].title,
