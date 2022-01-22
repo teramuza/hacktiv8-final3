@@ -57,21 +57,33 @@ const createProduct = (req, res) => {
             stock,
             CategoryId
         };
-        Product.create(bodyData)
-            .then((data) => {
-                responseUtil.successResponse(
-                    res,
-                    null,
-                    {product: {id: data.id, title, price: toRupiah(price), stock, CategoryId, updatedAt: data.updatedAt, createdAt: data.createdAt}},
-                    201
-            )})
-            .catch ((e) => {
-                if (e instanceof ValidationError) {
-                    return responseUtil.validationErrorResponse(res, e.errors[0]);
-                } else {
-                    return responseUtil.badRequestResponse(res, e);
-                }
-            })
+        
+        Category.findOne({where: {id: CategoryId}})
+        .then((category) => {
+            if(category) {
+                Product.create(bodyData)
+                    .then((data) => {
+                        responseUtil.successResponse(
+                            res,
+                            null,
+                            {product: {id: data.id, title, price: toRupiah(price), stock, CategoryId, updatedAt: data.updatedAt, createdAt: data.createdAt}},
+                            201
+                    )})
+                    .catch ((e) => {
+                        if (e instanceof ValidationError) {
+                            return responseUtil.validationErrorResponse(res, e.errors[0]);
+                        } else {
+                            return responseUtil.badRequestResponse(res, e);
+                        }
+                    })
+            } else { 
+                return responseUtil.badRequestResponse(res, {message: 'CategoryId not found'});
+            }
+        })
+        .catch((err) => {
+            return responseUtil.badRequestResponse(res, err);
+        })
+
     } catch (error) {
         return responseUtil.serverErrorResponse(res, {message: error.message});
     }
