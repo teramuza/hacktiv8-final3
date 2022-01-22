@@ -41,5 +41,10 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   });
+
+  Category.associate = (model) => {
+    Category.hasMany(model.Product, {foreignKey: 'CategoryId', onDelete: 'cascade', hooks: true});
+  }
+
   return Category;
 };

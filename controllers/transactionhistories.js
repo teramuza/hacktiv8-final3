@@ -2,10 +2,11 @@ const express = require('express');
 const {ValidationError} = require('sequelize');
 
 const router = express.Router();
+const BadRequestErr = require("../classes/BadRequestErr");
 const verifyToken = require('../middleware/verifyToken');
 const responseUtil = require('../helpers/response');
 const { toRupiah } = require('../helpers/currency');
-const { TransactionHistory, Product, User } = require('../models');
+const { TransactionHistory, Product, User, Category } = require('../models');
 
 const createTransaction = (req, res) => {
     try {
@@ -29,15 +30,27 @@ const createTransaction = (req, res) => {
                                 quantity,
                                 total_price
                             };
+                            req.payload = bodyData;
                             TransactionHistory.create(bodyData)
                             .then((data) => {
                                 const msg = 'You have successfully purchase the product';
-                                responseUtil.successResponse(
-                                    res,
-                                    {msg},
-                                    {transactionBill: {total_price: toRupiah(total_price), quantity, product_name: product.title }},
-                                    201
-                            )})
+                                onSuccessTransaction({
+                                    total_price,
+                                    quantity,
+                                    userId: id,
+                                    productId,
+                                    categoryId: product.CategoryId,
+                                }).then(() => responseUtil.successResponse(
+                                        res,
+                                        {msg},
+                                        {transactionBill: {total_price: toRupiah(total_price), quantity, product_name: product.title }},
+                                        201
+                                )).catch((err) => {
+                                        if (err instanceof BadRequestErr)
+                                            return responseUtil.badRequestResponse(res, err);
+                                        return responseUtil.serverErrorResponse(res, err);
+                                })
+                            })
                             .catch ((e) => {
                                 if (e instanceof ValidationError) {
                                     return responseUtil.validationErrorResponse(res, e.errors[0]);
@@ -59,7 +72,7 @@ const createTransaction = (req, res) => {
         })
         .catch()
     } catch (error) {
-        
+
     }
 }
 
@@ -126,6 +139,35 @@ const getTransactionAdmin = (req, res) => {
         return responseUtil.serverErrorResponse(res, {message: error.message});
     }
 }
+
+const onSuccessTransaction = async ({total_price, quantity, userId, productId, categoryId}) => {
+    await User.decrement({balance: -total_price}, {where: {id: userId}})
+        .then((data) => {
+            if (data[0] === 0) {
+                throw BadRequestErr('user not found')
+            }
+        })
+        .catch((err) => {
+            throw BadRequestErr(err.message)
+        });
+    await Product.decrement({stock: -quantity}, {where: {id: productId}})
+        .then((data) => {
+            if (data[0] === 0) {
+                throw BadRequestErr('product not found')
+            }
+        })
+        .catch((err) => {
+            throw BadRequestErr(err.message)
+        });
+    await Category.increment({sold_product_amount: +quantity}, {where: {id: categoryId}})
+        .then((data) => {
+            if (data[0] === 0) {
+                throw BadRequestErr('category not found')
+            }
+        })
+        .catch((err) => {
+            throw BadRequestErr(err.message)
+        });}
 
 
 router.post('/', verifyToken, createTransaction);
