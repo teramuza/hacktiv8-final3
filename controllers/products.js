@@ -3,6 +3,8 @@ const {ValidationError} = require('sequelize');
 
 const router = express.Router();
 const verifyToken = require('../middleware/verifyToken');
+const verifyUser = require('../middleware/verifyUser');
+const verifyAdmin = require('../middleware/verifyAdmin');
 const responseUtil = require('../helpers/response');
 const { toRupiah } = require('../helpers/currency');
 const { Product, Category } = require('../models');
@@ -118,19 +120,19 @@ const updateProduct = (req, res) => {
 const updateCategoryId = (req, res) => {
     try {
         const { CategoryId } = req.body;
-        Category.findOne({where: {CategoryId}})
+        Category.findOne({where: {id: CategoryId}})
         .then((category) => {
             if(category) {
                 Product.update({CategoryId: CategoryId}, {where: {CategoryId}, returning: true})
                 .then((product) => {
                     return responseUtil.successResponse(res, null, {product: {
-                        id: data[1][0].id,
-                        title,
-                        price: toRupiah(price),
-                        stock,
-                        CategoryId: data[1][0].CategoryId,
-                        createdAt: data[1][0].createdAt, 
-                        updatedAt: data[1][0].updatedAt}}, 200);
+                        id: product[1][0].id,
+                        title: product[1][0].title,
+                        price: toRupiah(product[1][0].price),
+                        stock: product[1][0].stock,
+                        CategoryId: product[1][0].CategoryId,
+                        createdAt: product[1][0].createdAt, 
+                        updatedAt: product[1][0].updatedAt}}, 200);
                 })
                 .catch((e) => {
                     return responseUtil.badRequestResponse(res, e);
@@ -166,10 +168,10 @@ const deleteProduct = (req, res) => {
     }
 }
 
-router.get('/', verifyToken, getProducts);
-router.post('/', verifyToken, createProduct);
-router.put('/:productId', verifyToken, updateProduct);
-router.patch('/:productId', verifyToken, updateCategoryId);
-router.delete('/:productId', verifyToken, deleteProduct);
+router.get('/', verifyToken, verifyUser, verifyAdmin, getProducts);
+router.post('/', verifyToken, verifyUser, verifyAdmin, createProduct);
+router.put('/:productId', verifyToken, verifyUser, verifyAdmin, updateProduct);
+router.patch('/:productId', verifyToken, verifyUser, verifyAdmin, updateCategoryId);
+router.delete('/:productId', verifyToken, verifyUser, verifyAdmin, deleteProduct);
 
 module.exports = router;

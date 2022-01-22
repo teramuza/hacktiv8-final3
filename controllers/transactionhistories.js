@@ -2,11 +2,10 @@ const express = require('express');
 const {ValidationError} = require('sequelize');
 
 const router = express.Router();
-const BadRequestErr = require("../classes/BadRequestErr");
 const verifyToken = require('../middleware/verifyToken');
 const responseUtil = require('../helpers/response');
 const { toRupiah } = require('../helpers/currency');
-const { TransactionHistory, Product, User, Category } = require('../models');
+const { TransactionHistory, Product, User } = require('../models');
 
 const createTransaction = (req, res) => {
     try {
@@ -30,27 +29,15 @@ const createTransaction = (req, res) => {
                                 quantity,
                                 total_price
                             };
-                            req.payload = bodyData;
                             TransactionHistory.create(bodyData)
                             .then((data) => {
                                 const msg = 'You have successfully purchase the product';
-                                onSuccessTransaction({
-                                    total_price,
-                                    quantity,
-                                    userId: id,
-                                    productId,
-                                    categoryId: product.CategoryId,
-                                }).then(() => responseUtil.successResponse(
-                                        res,
-                                        {msg},
-                                        {transactionBill: {total_price: toRupiah(total_price), quantity, product_name: product.title }},
-                                        201
-                                )).catch((err) => {
-                                        if (err instanceof BadRequestErr)
-                                            return responseUtil.badRequestResponse(res, err);
-                                        return responseUtil.serverErrorResponse(res, err);
-                                })
-                            })
+                                responseUtil.successResponse(
+                                    res,
+                                    {msg},
+                                    {transactionBill: {total_price: toRupiah(total_price), quantity, product_name: product.title }},
+                                    201
+                            )})
                             .catch ((e) => {
                                 if (e instanceof ValidationError) {
                                     return responseUtil.validationErrorResponse(res, e.errors[0]);
@@ -140,38 +127,43 @@ const getTransactionAdmin = (req, res) => {
     }
 }
 
-const onSuccessTransaction = async ({total_price, quantity, userId, productId, categoryId}) => {
-    await User.decrement({balance: -total_price}, {where: {id: userId}})
+const getTransaction = (req, res) => {
+    try {
+        const transactionId = parseInt(req.params.transactionId);
+        const userId = req.user.id;
+        TransactionHistory.findOne({
+            where: {id: transactionId},
+            include: [
+                {
+                    model: Product,
+                    attributes: ['id', 'title', 'price', 'stock', 'CategoryId']
+                }
+            ]
+        })
         .then((data) => {
-            if (data[0] === 0) {
-                throw BadRequestErr('user not found')
+            if (data === null) {
+                return responseUtil.badRequestResponse(res, {message: 'data not found'});
+            }
+            if (data.userId !== userId) {
+                return responseUtil.badRequestResponse(res, {message: 'data is not yours'});
+            }
+            return responseUtil.successResponse(res, null, {data});
+        })
+        .catch((e) => {
+            if (e instanceof ValidationError) {
+                return responseUtil.validationErrorResponse(res, e.errors[0]);
+            } else {
+                return responseUtil.badRequestResponse(res, e);
             }
         })
-        .catch((err) => {
-            throw BadRequestErr(err.message)
-        });
-    await Product.decrement({stock: -quantity}, {where: {id: productId}})
-        .then((data) => {
-            if (data[0] === 0) {
-                throw BadRequestErr('product not found')
-            }
-        })
-        .catch((err) => {
-            throw BadRequestErr(err.message)
-        });
-    await Category.increment({sold_product_amount: +quantity}, {where: {id: categoryId}})
-        .then((data) => {
-            if (data[0] === 0) {
-                throw BadRequestErr('category not found')
-            }
-        })
-        .catch((err) => {
-            throw BadRequestErr(err.message)
-        });}
+    } catch (error) {
+        return responseUtil.serverErrorResponse(res, {message: error.message});
+    }
+}
 
-
-router.post('/', verifyToken, createTransaction);
 router.get('/user', verifyToken, getTransactionUser);
 router.get('/admin', verifyToken, getTransactionAdmin);
+router.get('/:transactionId', verifyToken, getTransaction);
+router.post('/', verifyToken, createTransaction);
 
 module.exports = router;
