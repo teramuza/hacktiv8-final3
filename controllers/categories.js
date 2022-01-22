@@ -80,9 +80,9 @@ const deleteCategory = async (req, res) => {
     }
 }
 
-router.post('/', verifyToken, verifyUser, verifyAdmin, createCategory);
-router.get('/', verifyToken, verifyUser, verifyAdmin, getCategories);
-router.patch('/:categoryId', verifyToken, verifyUser, verifyAdmin, updateCategory);
-router.delete('/:categoryId', verifyToken, verifyUser, verifyAdmin, deleteCategory);
+router.post('/', createCategory);
+router.get('/', getCategories);
+router.patch('/:categoryId', updateCategory);
+router.delete('/:categoryId', deleteCategory);
 
 module.exports = router;

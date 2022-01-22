@@ -103,7 +103,7 @@ const updateProduct = (req, res) => {
                     price: toRupiah(price),
                     stock,
                     CategoryId: data[1][0].CategoryId,
-                    createdAt: data[1][0].createdAt, 
+                    createdAt: data[1][0].createdAt,
                     updatedAt: data[1][0].updatedAt}}, 200);
             })
             .catch(e => {
@@ -131,7 +131,7 @@ const updateCategoryId = (req, res) => {
                         price: toRupiah(product[1][0].price),
                         stock: product[1][0].stock,
                         CategoryId: product[1][0].CategoryId,
-                        createdAt: product[1][0].createdAt, 
+                        createdAt: product[1][0].createdAt,
                         updatedAt: product[1][0].updatedAt}}, 200);
                 })
                 .catch((e) => {
@@ -168,10 +168,10 @@ const deleteProduct = (req, res) => {
     }
 }
 
-router.get('/', verifyToken, verifyUser, verifyAdmin, getProducts);
-router.post('/', verifyToken, verifyUser, verifyAdmin, createProduct);
-router.put('/:productId', verifyToken, verifyUser, verifyAdmin, updateProduct);
-router.patch('/:productId', verifyToken, verifyUser, verifyAdmin, updateCategoryId);
-router.delete('/:productId', verifyToken, verifyUser, verifyAdmin, deleteProduct);
+router.get('/', getProducts);
+router.post('/', verifyAdmin, createProduct);
+router.put('/:productId', verifyAdmin, updateProduct);
+router.patch('/:productId', verifyAdmin, updateCategoryId);
+router.delete('/:productId', verifyAdmin, deleteProduct);
 
 module.exports = router;
