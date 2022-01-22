@@ -77,22 +77,26 @@ const updateUser = (req, res) => {
             email,
             full_name,
         }
-        const userId = req.user.id;
-        User.update(bodyData, {where: {id: userId}, returning: true})
-            .then((data) => {
-                if (data[0] === 0){
-                    return responseUtil.badRequestResponse(res, {message: 'data not found'});
-                }
-                if (data[1][0])
-                    data[1][0]['password'] = undefined;
-                return responseUtil.successResponse(res, null, {user: data[1][0]});
-            })
-            .catch(err => {
-                if (err instanceof ValidationError) {
-                    return responseUtil.validationErrorResponse(res, err.errors[0]);
-                }
-                return responseUtil.badRequestResponse(res, err);
-            })
+        const userId = parseInt(req.params.userId);
+        if (req.user.id === userId) {
+            User.update(bodyData, {where: {id: userId}, returning: true})
+                .then((data) => {
+                    if (data[0] === 0){
+                        return responseUtil.badRequestResponse(res, {message: 'data not found'});
+                    }
+                    if (data[1][0])
+                        data[1][0]['password'] = undefined;
+                    return responseUtil.successResponse(res, null, {user: data[1][0]});
+                })
+                .catch(err => {
+                    if (err instanceof ValidationError) {
+                        return responseUtil.validationErrorResponse(res, err.errors[0]);
+                    }
+                    return responseUtil.badRequestResponse(res, err);
+                })
+        } else {
+            return responseUtil.badRequestResponse(res, {message: 'you can only update your own data'})
+        }
     } catch (e) {
         return responseUtil.serverErrorResponse(res, {message: e.message});
     }
@@ -155,7 +159,7 @@ const topUpBalance = (req, res) => {
 
 const deleteUser = (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = parseInt(req.params.userId);
         User.destroy({where: {id: userId}})
             .then(result => {
                 if (result === 0) {
@@ -173,9 +177,9 @@ const deleteUser = (req, res) => {
 
 router.post('/register', register);
 router.post('/login', login);
-router.put('/', verifyToken, updateUser);
+router.put('/:userId', verifyToken, updateUser);
 router.patch('/topup', verifyToken, topUpBalance);
 router.patch('/changePassword', updatePassword);
-router.delete('/', verifyToken, deleteUser);
+router.delete('/:userId', verifyToken, deleteUser);
 
 module.exports = router;
